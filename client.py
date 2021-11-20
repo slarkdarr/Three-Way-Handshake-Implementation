@@ -81,10 +81,9 @@ else:
     client_socket.bind(('localhost', PORT))
     print(client_socket)
 
-    close = client_close(client_socket, ('', 5000))
-    if close:
-        print("connection closed")
-    else:
-        print("weird but client")
+    message, _ = client_socket.recvfrom(1024)
+    decoded_message = message.decode()
+    write_to_file(decoded_message, dest_filename)
+    print("done writing to file...")
 
         

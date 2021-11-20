@@ -4,7 +4,7 @@ import random
 # encode chunks of file into binary
 def encode_file(file_name, seq_num):
     data_segment = ''
-    with open(file_name, 'rb') as fptr:
+    with open(file_name, 'r') as fptr:
         offset = seq_num * constant.MAX_DATA_SEGMENT
         fptr.seek(offset, 0)
         for i in range(1, constant.MAX_DATA_SEGMENT+1):

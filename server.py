@@ -82,9 +82,8 @@ else:
     server_socket.bind(('', PORT))
     print("Server is listening on " + '0.0.0.0:' + str(PORT))
 
-    close = server_close(server_socket, ('localhost', 5003))
-    if close:
-        print("connection closed")
-    else:
-        print("weird")
+    segment_data = encode_file(source_filename, 0)
+    message = make_message_segment(0, 0, encoded_data=segment_data)
+    server_socket.sendto(message.encode(), ('localhost', 5003))
+    print("done sending")
 
