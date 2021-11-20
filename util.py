@@ -26,19 +26,26 @@ def make_message_segment(seq_no, ack_no, encoded_data='', syn=False, ack=False, 
     message = '{0:032b}'.format(seq_no)
     message += '{0:032b}'.format(ack_no)
 
-    message += '0' * 32
-    if syn:
-        message[65] = '1'
-    
-    if ack:
-        message[67] = '1'
-
     if fin:
-        message[64] = '1'
+        message += '1'
+    else:
+        message += '0'
 
+    if syn:
+        message += '1'
+    else:
+        message += '0'
 
+    message += '0'
+
+    if ack:
+        message += '1'
+    else:
+        message += '0'
+
+    message += '0' * 28
     message += encoded_data
-    add_message_checksum(message)
+    message = add_message_checksum(message)
     
     return message
 
@@ -50,7 +57,7 @@ def add_message_checksum(message):
 
 
     ## Add checksum algorithm here
-    pass
+    return message
 
 ## Implement checksum verification here
 def verify_checksum(message):
@@ -59,4 +66,6 @@ def verify_checksum(message):
 
 def random_num():
 	generated_number = random.randint(0, 400000)
-	return generated_number
+	return generated_number 
+
+
