@@ -1,6 +1,7 @@
 import constant
 import random
 
+# encode chunks of file into binary
 def encode_file(file_name, seq_num):
     data_segment = ''
     with open(file_name, 'rb') as fptr:
@@ -22,6 +23,7 @@ def encode_file(file_name, seq_num):
 
     return encoded_data
 
+# Create message segment to send
 def make_message_segment(seq_no, ack_no, encoded_data='', syn=False, ack=False, fin=False):
     message = '{0:032b}'.format(seq_no)
     message += '{0:032b}'.format(ack_no)
@@ -49,6 +51,7 @@ def make_message_segment(seq_no, ack_no, encoded_data='', syn=False, ack=False, 
     
     return message
 
+# Add checksum to message
 def add_message_checksum(message):
     
     chunks = []
@@ -63,9 +66,22 @@ def add_message_checksum(message):
 def verify_checksum(message):
     pass
 
-
+# generate random number
 def random_num():
 	generated_number = random.randint(0, 400000)
 	return generated_number 
 
 
+# Write message from segment into file
+def write_to_file(message, file_name):
+    fptr = open(file_name, 'a')
+    segment_data = str(message[96:])
+    text = ''
+
+    for i in range(len(segment_data)//8):
+        char_byte = str(segment_data[i*8:(i+1)*8])
+        char = chr(int(char_byte, 2))
+        text += char 
+    
+    fptr.write(text)
+    fptr.close()
