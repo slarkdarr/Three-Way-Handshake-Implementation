@@ -8,6 +8,7 @@ PORT = int(sys.argv[1])
 source_filename = sys.argv[2]
 STATE = ''
 
+# Three way handshake from the server side
 def server_handshake(socket, addr):
     seq_no = random_num()
     ack_no = 0
@@ -15,13 +16,15 @@ def server_handshake(socket, addr):
     message = make_message_segment(seq_no,ack_no, syn=True)
     socket.sendto(message.encode(), addr)
     STATE = constant.SYN_SENT
+    print("Syn packet sent to client " + str(addr[0]) + ":" + str(addr[1]))
     
     while(1):
         message, rec_addr = socket.recvfrom(1024)
         decoded_segment = message.decode()
-        if len(decoded_segment) > 10 and rec_addr == addr:
+        if len(decoded_segment) > 10:
             if(decoded_segment[65] == '1' and decoded_segment[67] == '1'):
                 STATE = constant.SYN_ACK_RECEIVED
+                print("Syn Ack packet received from client " + str(addr[0]) + ":" + str(addr[1]))
                 ack_no = int(decoded_segment[32:64], 2)
                 break
 
@@ -29,13 +32,16 @@ def server_handshake(socket, addr):
         seq_no = int(decoded_segment[0:32], 2)
         message = make_message_segment(ack_no+1,seq_no+1, ack=True)
         socket.sendto(message.encode(), addr)
-        STATE = constant.ESTABLISHED 
+        print("Ack packet sent to client " + str(addr[0]) + ":" + str(addr[1]))
+        STATE = constant.ESTABLISHED
+
 
     if STATE == constant.ESTABLISHED:
         return True
     
     return False
 
+# Closing connection from the server side
 def server_close(socket, addr):
     seq_no = 100 
     ack_no = 300
@@ -82,8 +88,31 @@ else:
     server_socket.bind(('', PORT))
     print("Server is listening on " + '0.0.0.0:' + str(PORT))
 
-    segment_data = encode_file(source_filename, 0)
-    message = make_message_segment(0, 0, encoded_data=segment_data)
-    server_socket.sendto(message.encode(), ('localhost', 5003))
-    print("done sending")
+    STATE = constant.LISTEN_STATE
+    client_list = []
+    while(1):
+        message, addr = server_socket.recvfrom(1024)
+        client_list.append(addr)
+        print('Client (127.0.0.1:' + str(addr[1]) + ')')
+        command = input('Keep listening?[y/n]: ')
+        if command == 'n' or command == 'N':
+            break
+    
+    for addr in client_list:
+        print("Initiating handshake with " + str(addr[0]) + ":" + str(addr[1]))
+        conn = server_handshake(server_socket, addr)
+        if conn:
+            print("Connected with client (" + str(addr[0]) + ":" + str(addr[1]) + ")")
+            print("Initiating file transfers...")
+            # Insert GO Back N Algorithm here
+            pass
+        
+        print('File transfers completed')
+        print('Closing connection with ' + str(addr[0]) + ":" + str(addr[1]))
+        server_close(server_socket, addr)
+        print('Connection closed with ' + str(addr[0]) + ":" + str(addr[1]))
+
+    print(client_list)
+
+    print("All client served, shutting down server...")
 

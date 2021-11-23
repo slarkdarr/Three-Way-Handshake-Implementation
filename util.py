@@ -53,11 +53,9 @@ def make_message_segment(seq_no, ack_no, encoded_data='', syn=False, ack=False, 
 
 # Add checksum to message
 def add_message_checksum(message):
-    
     chunks = []
     for i in range(0, len(message), 16):
         chunks.append(message[i:i+16])
-
 
     ## Add checksum algorithm here
     return message
