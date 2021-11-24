@@ -13,3 +13,4 @@ CLOSE_WAIT = 'close wait'
 LAST_ACK = 'last ack'
 CLOSED = 'closed connection'
 BROADCAST_SENT = 'broadcast sent'
+WINDOW_SIZE = 3

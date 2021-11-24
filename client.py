@@ -92,7 +92,27 @@ else:
     client_handshake(client_socket, ('', 5000))
     STATE = constant.ESTABLISHED
 
-    # Insert Go Back N here
+    # Go-Back-N
+    Rn = 0
+    while 1:
+        message, _ = client_socket.recvfrom(32768+96)
+        decoded_segment = message.decode()
+        
+        if ():
+
+        else:
+            Sn = int(decoded_segment[0:32], 2)
+            last_ack = Rn
+
+            if (Sn == Rn and verify_checksum(decoded_segment)):
+                print("[Segment SEQ="+str(Rn+1)+"] Received, Ack sent")
+                write_to_file(decoded_segment, dest_filename)
+                Rn += 1
+            else:
+                print("[Segment SEQ="+str(Rn+1)+"] Segment damaged. Ack prev sequence number.")
+                
+            msg = make_message_segment(0, last_ack, ack=True)
+            client_socket.sendto(msg.encode(), ('', 5000))
 
     client_close(client_socket, ('', 5000))
     STATE = constant.CLOSED

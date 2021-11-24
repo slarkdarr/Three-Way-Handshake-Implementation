@@ -1,5 +1,6 @@
 import sys
 import socket
+from client import Rn
 from util import *
 import constant
 
@@ -104,8 +105,39 @@ else:
         if conn:
             print("Connected with client (" + str(addr[0]) + ":" + str(addr[1]) + ")")
             print("Initiating file transfers...")
-            # Insert GO Back N Algorithm here
-            pass
+            
+            # GO Back N
+            Rn = 0
+            Sb = 0
+            Sm = constant.WINDOW_SIZE + 1
+
+            while 1:
+                message, _ = server_socket.recvfrom(1024)
+                decoded_segment = message.decode()
+                
+                last_ack = int(decoded_segment[32:64], 2)
+                Rn = last_ack + 1
+
+                #print([Segment SEQ=1] Sent)
+
+                if (Rn > Sb and Rn >= Sm):
+                    for i in range(Sb, Sm):
+                        print("[Segment SEQ="+str(Sb+1)+"] Acked")
+                    Sm += constant.WINDOW_SIZE
+                    Sb += constant.WINDOW_SIZE
+                elif (Rn > Sb and Rn < Sm):
+                    for i in range(Sb, Rn):
+                        print("[Segment SEQ="+str(Sb+1)+"] Acked")
+                    print("[Segment SEQ="+str(Rn)+"] NOT ACKED. Duplicate Ack found")
+                    Sm = (Sm - Sb) + Rn
+                    Sb = Rn
+                
+                if ():
+                    for i in range(Sb, Sm):
+                        data = encode_file(source_filename, i)
+                        msg = make_message_segment(i, last_ack, encoded_data=data)
+                        add_message_checksum(msg)
+                        server_socket.sendto(msg.encode(), addr)
         
         print('File transfers completed')
         print('Closing connection with ' + str(addr[0]) + ":" + str(addr[1]))
