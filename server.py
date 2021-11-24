@@ -1,6 +1,5 @@
 import sys
 import socket
-from client import Rn
 from util import *
 import constant
 
@@ -8,6 +7,7 @@ HOST = 'localhost'
 PORT = int(sys.argv[1])
 source_filename = sys.argv[2]
 STATE = ''
+MAX_SEQUENCE_NO = count_max_sequence(source_filename)
 
 # Three way handshake from the server side
 def server_handshake(socket, addr):
@@ -65,10 +65,7 @@ def server_close(socket, addr):
         message, _ = socket.recvfrom(1024)
         decoded_segment = message.decode()
         temp = int(decoded_segment[32:64],2)
-        print(temp)
-        print(seq_no)
         if decoded_segment[64] == '1' and decoded_segment[67] == '1' and temp == seq_no:
-            print('test')
             STATE = constant.TIME_WAIT
     
     if STATE == constant.TIME_WAIT:
@@ -107,44 +104,55 @@ else:
             print("Initiating file transfers...")
             
             # GO Back N
-            Rn = 0
-            Sb = 0
+            Rn = 1
+            Sb = 1
             Sm = constant.WINDOW_SIZE + 1
+            last_ack = 0
 
+            server_socket.settimeout(7.0)
             while 1:
-                message, _ = server_socket.recvfrom(1024)
-                decoded_segment = message.decode()
+                count = 1
+                while(count <= constant.WINDOW_SIZE):
+                    try:
+                        message, _ = server_socket.recvfrom(1024)
+                        decoded_segment = message.decode()
+                        
+                        temp = last_ack
+                        last_ack = int(decoded_segment[32:64], 2)
+                        
+                        if last_ack == temp:
+                            print("[Segment SEQ=%d] NOT ACKED. Duplicate Ack found" % last_ack+1)
+                            print("### Commencing Go Back-N Protocol ###")
+                            break
+                        else:
+                            print("[Segment SEQ=%d] ACKED." % last_ack)
+
+                        Rn = last_ack + 1
+                        count += 1
+                    except:
+                        break
                 
-                last_ack = int(decoded_segment[32:64], 2)
-                Rn = last_ack + 1
-
-                #print([Segment SEQ=1] Sent)
-
-                if (Rn > Sb and Rn >= Sm):
-                    for i in range(Sb, Sm):
-                        print("[Segment SEQ="+str(Sb+1)+"] Acked")
-                    Sm += constant.WINDOW_SIZE
-                    Sb += constant.WINDOW_SIZE
-                elif (Rn > Sb and Rn < Sm):
-                    for i in range(Sb, Rn):
-                        print("[Segment SEQ="+str(Sb+1)+"] Acked")
-                    print("[Segment SEQ="+str(Rn)+"] NOT ACKED. Duplicate Ack found")
+                if(last_ack == MAX_SEQUENCE_NO):
+                    break
+                
+                if (Rn > Sb):
                     Sm = (Sm - Sb) + Rn
                     Sb = Rn
                 
-                if ():
-                    for i in range(Sb, Sm):
-                        data = encode_file(source_filename, i)
-                        msg = make_message_segment(i, last_ack, encoded_data=data)
-                        add_message_checksum(msg)
-                        server_socket.sendto(msg.encode(), addr)
+                temp = min(Sm, MAX_SEQUENCE_NO+1)
+                for i in range(Sb, temp):
+                    data = encode_file(source_filename, i-1)
+                    msg = make_message_segment(i, last_ack, encoded_data=data)
+                    print(len(msg))
+                    add_message_checksum(msg)
+                    server_socket.sendto(msg.encode(), addr)
+                    print("[Segment SEQ=%d] Sent" % i)
         
+        server_socket.settimeout(None)
         print('File transfers completed')
         print('Closing connection with ' + str(addr[0]) + ":" + str(addr[1]))
         server_close(server_socket, addr)
         print('Connection closed with ' + str(addr[0]) + ":" + str(addr[1]))
-
-    print(client_list)
 
     print("All client served, shutting down server...")
 

@@ -11,6 +11,7 @@ STATE = ''
 
 # Three way handshake from the client side
 def client_handshake(socket, addr):
+    global STATE
     seq_no = random_num()
     ack_no = 0
 
@@ -42,18 +43,11 @@ def client_handshake(socket, addr):
     return False
 
 # Closing connection from the client side
-def client_close(socket, addr):
-    seq_no = 0
-    ack_no = 0
-
-    message, _ = socket.recvfrom(1024)
-    decoded_segment = message.decode()
-    if decoded_segment[64] == '1' and decoded_segment[67] == '1':
-        STATE = constant.CLOSE_WAIT
-        print("Closing connection with server")
-        seq_no = int(decoded_segment[32:64],2)
-        ack_no = int(decoded_segment[0:32],2) + 1
+def client_close(socket, message, addr):
+    seq_no = int(message[32:64],2)
+    ack_no = int(message[0:32],2) + 1
     
+    global STATE
     if STATE == constant.CLOSE_WAIT:
         message = make_message_segment(seq_no, ack_no, ack=True)
         socket.sendto(message.encode(), addr)
@@ -93,28 +87,31 @@ else:
     STATE = constant.ESTABLISHED
 
     # Go-Back-N
-    Rn = 0
+    Rn = 1
+    last_ack = 0
     while 1:
-        message, _ = client_socket.recvfrom(32768+96)
+        message, _ = client_socket.recvfrom(constant.MAX_DATA_SEGMENT+96)
         decoded_segment = message.decode()
         
-        if ():
-
+        if decoded_segment[64] == '1' and decoded_segment[67] == '1':
+            STATE = constant.CLOSE_WAIT
+            print("Closing connection with server")
+            client_close(client_socket, decoded_segment, ('', 5000))
+            break
         else:
             Sn = int(decoded_segment[0:32], 2)
-            last_ack = Rn
-
+            
             if (Sn == Rn and verify_checksum(decoded_segment)):
-                print("[Segment SEQ="+str(Rn+1)+"] Received, Ack sent")
+                print("[Segment SEQ="+str(Rn)+"] Received, Ack sent")
                 write_to_file(decoded_segment, dest_filename)
+                last_ack = Rn
                 Rn += 1
-            else:
-                print("[Segment SEQ="+str(Rn+1)+"] Segment damaged. Ack prev sequence number.")
+            elif (not verify_checksum(decoded_segment)):
+                print("[Segment SEQ="+str(Rn)+"] Segment damaged. Ack prev sequence number.")
                 
             msg = make_message_segment(0, last_ack, ack=True)
             client_socket.sendto(msg.encode(), ('', 5000))
 
-    client_close(client_socket, ('', 5000))
     STATE = constant.CLOSED
     print("Connection closed with server")
     print("Shutting down client")

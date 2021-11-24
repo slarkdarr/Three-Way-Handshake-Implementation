@@ -1,4 +1,4 @@
-MAX_DATA_SEGMENT = 1024
+MAX_DATA_SEGMENT = 4096
 LISTEN_STATE = 'listen'
 INITIATE_THREE_WAY = 'initiate three way'
 SYN_SENT = 'syn sent'

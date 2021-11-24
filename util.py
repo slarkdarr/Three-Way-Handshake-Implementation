@@ -1,5 +1,7 @@
 import constant
 import random
+import os
+from math import ceil
 
 # encode chunks of file into binary
 def encode_file(file_name, seq_num):
@@ -22,6 +24,8 @@ def encode_file(file_name, seq_num):
     
 
     return encoded_data
+
+
 
 # Create message segment to send
 def make_message_segment(seq_no, ack_no, encoded_data='', syn=False, ack=False, fin=False):
@@ -62,7 +66,7 @@ def add_message_checksum(message):
 
 ## Implement checksum verification here
 def verify_checksum(message):
-    pass
+    return True
 
 # generate random number
 def random_num():
@@ -83,3 +87,10 @@ def write_to_file(message, file_name):
     
     fptr.write(text)
     fptr.close()
+
+# Count the maximum sequence number for a file transmission
+def count_max_sequence(filename):
+    file_size = os.path.getsize(filename)
+    max_sequence = ceil(file_size/constant.MAX_DATA_SEGMENT)
+
+    return max_sequence

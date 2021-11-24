@@ -1,0 +1,8 @@
+1. get several message all at once and have timer mechanism
+2. get last acked message
+3. Update Sb and Sm
+4. Send message accordingly
+
+1. define rn, sb, sm, sn and sync with client
+2. test select 
+3. code and test
