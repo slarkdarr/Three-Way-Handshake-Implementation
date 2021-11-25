@@ -114,4 +114,4 @@ def verify_checksum(message):
     if checksum == int(message[80:96], 2):
         return True
     
-    return True
+    return False
