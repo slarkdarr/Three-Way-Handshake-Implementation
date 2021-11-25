@@ -61,11 +61,58 @@ def add_message_checksum(message):
     for i in range(0, len(message), 16):
         chunks.append(message[i:i+16])
 
-    ## Add checksum algorithm here
-    return message
+    ## Calculate the binary sum of packets
+    packet_sum = 0
+    for i in chunks:
+        packet_sum += int(i,2)
+
+    bin_sum = bin(packet_sum)[2:]
+    
+    # Add overflow bits
+    if (len(bin_sum) > 16):
+        x = len(bin_sum) - 16
+        bin_sum = bin(int(bin_sum[0:x], 2)+int(bin_sum[x:], 2))[2:]
+    if (len(bin_sum) < 16):
+        bin_sum = '0'*(k-len(bin_sum))+bin_sum
+
+    checksum = ''
+    for i in bin_sum:
+        if (i == '1'):
+            checksum += '0'
+        else:
+            checksum += '1'
+
+    return checksum
 
 ## Implement checksum verification here
 def verify_checksum(message):
+    chunks = []
+    for i in range(0, len(message), 16):
+        chunks.append(message[i:i+16])
+
+    checksum = add_message_checksum(message)
+
+    ## Calculate the binary sum of packets + checksum
+    packet_sum = int(checksum,2)
+    for i in chunks:
+        packet_sum += int(i,2)
+
+    bin_sum = bin(packet_sum)[2:]
+
+    if (len(bin_sum) > 16):
+        x = len(bin_sum) - 16
+        bin_sum = bin(int(bin_sum[0:x], 2)+int(bin_sum[x:], 2))[2:]
+
+    receiver_checksum = ''
+    for i in bin_sum:
+        if (i == '1'):
+            receiver_checksum += '0'
+        else:
+            receiver_checksum += '1'
+
+    if (int(receiver_checksum, 2) != 0):
+        return False
+
     return True
 
 # generate random number
