@@ -53,7 +53,6 @@ def make_message_segment(seq_no, ack_no, encoded_data='', syn=False, ack=False, 
     
     return message
 
-    
 # generate random number
 def random_num():
 	generated_number = random.randint(0, 400000)
