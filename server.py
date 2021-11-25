@@ -86,6 +86,17 @@ else:
     server_socket.bind(('', PORT))
     print("Server is listening on " + '0.0.0.0:' + str(PORT))
 
+    print('==================================================================')
+    print('SERVER STARTED')
+    print('==================================================================')
+    print()
+    print('++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++')
+    print('LISTENING')
+    print('++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++')
+
+
+
+
     STATE = constant.LISTEN_STATE
     client_list = []
     while(1):
@@ -97,11 +108,22 @@ else:
             break
     
     for addr in client_list:
+        print()
+        print('++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++')
+        print('INITIATING HANDSHAKE')
+        print('++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++')
         print("Initiating handshake with " + str(addr[0]) + ":" + str(addr[1]))
         conn = server_handshake(server_socket, addr)
         if conn:
+            print()
+            print('++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++')
+            print('CONNECTION ESTABLISHED')
+            print('++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++')
             print("Connected with client (" + str(addr[0]) + ":" + str(addr[1]) + ")")
-            print("Initiating file transfers...")
+            print()
+            print('++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++')
+            print('INITIATING FILE TRANSFERS')
+            print('++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++')
             
             # GO Back N
             Rn = 1
@@ -143,16 +165,27 @@ else:
                 for i in range(Sb, temp):
                     data = encode_file(source_filename, i-1)
                     msg = make_message_segment(i, last_ack, encoded_data=data)
-                    print(len(msg))
-                    add_message_checksum(msg)
                     server_socket.sendto(msg.encode(), addr)
                     print("[Segment SEQ=%d] Sent" % i)
         
         server_socket.settimeout(None)
-        print('File transfers completed')
+        print()
+        print('++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++')
+        print('FILE TRANSFER COMPLETE')
+        print('++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++')
+
         print('Closing connection with ' + str(addr[0]) + ":" + str(addr[1]))
         server_close(server_socket, addr)
+        print()
+        print('++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++')
+        print('SERVER CONNECTION CLOSED')
+        print('++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++')
         print('Connection closed with ' + str(addr[0]) + ":" + str(addr[1]))
 
+    print()
+    print('==================================================================')
+    print('SERVER SHUTTING DOWN')
+    print('==================================================================')
+    print()
     print("All client served, shutting down server...")
 

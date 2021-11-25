@@ -25,8 +25,6 @@ def encode_file(file_name, seq_num):
 
     return encoded_data
 
-
-
 # Create message segment to send
 def make_message_segment(seq_no, ack_no, encoded_data='', syn=False, ack=False, fin=False):
     message = '{0:032b}'.format(seq_no)
@@ -55,19 +53,7 @@ def make_message_segment(seq_no, ack_no, encoded_data='', syn=False, ack=False, 
     
     return message
 
-# Add checksum to message
-def add_message_checksum(message):
-    chunks = []
-    for i in range(0, len(message), 16):
-        chunks.append(message[i:i+16])
-
-    ## Add checksum algorithm here
-    return message
-
-## Implement checksum verification here
-def verify_checksum(message):
-    return True
-
+    
 # generate random number
 def random_num():
 	generated_number = random.randint(0, 400000)
@@ -94,3 +80,39 @@ def count_max_sequence(filename):
     max_sequence = ceil(file_size/constant.MAX_DATA_SEGMENT)
 
     return max_sequence
+
+# Add checksum to message
+def add_message_checksum(message):
+    chunks = []
+    for i in range(0, len(message), 16):
+        chunks.append(message[i:i+16])
+
+    checksum = 0
+    for i in range(len(chunks)):
+        checksum += int(chunks[i],2)
+        if checksum >= (1 << 16):
+            checksum = (checksum+1) % (1 << 16)
+    
+    
+    checksum_segment = '{0:016b}'.format(checksum)
+    new_message = message[0:80] + checksum_segment + message[96:]
+    return new_message
+
+## Implement checksum verification here
+def verify_checksum(message):
+    chunks = []
+    for i in range(0, len(message), 16):
+        chunks.append(message[i:i+16])
+    
+    chunks[5] = '0' * 16
+
+    checksum = 0
+    for i in range(len(chunks)):
+        checksum += int(chunks[i],2)
+        if checksum >= (1 << 16):
+            checksum = (checksum+1) % (1 << 16)
+    
+    if checksum == int(message[80:96], 2):
+        return True
+    
+    return True

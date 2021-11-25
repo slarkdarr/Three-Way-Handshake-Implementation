@@ -79,12 +79,28 @@ else:
     client_socket.setsockopt(socket.SOL_SOCKET, socket.SO_BROADCAST, 1)
     client_socket.bind(('localhost', PORT))
 
+
+    print('==================================================================')
+    print('CLIENT STARTED')
+    print('==================================================================')
     print("Client binded to address and ready to request connection")
-    print("Sending request message to broadcast")
+    print("Sending request message to broadcast....................")
     client_socket.sendto(b'request', ('255.255.255.255', 5000))
     STATE = constant.BROADCAST_SENT
+    print()
+    print('++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++')
+    print('INITIATING HANDSHAKE')
+    print('++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++')
     client_handshake(client_socket, ('', 5000))
     STATE = constant.ESTABLISHED
+
+    print('++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++')
+    print('CONNECTION ESTABLISHED')
+    print('++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++')
+    print()
+    print('++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++')
+    print('INITIATING FILE TRANSFERS')
+    print('++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++')
 
     # Go-Back-N
     Rn = 1
@@ -100,7 +116,6 @@ else:
             break
         else:
             Sn = int(decoded_segment[0:32], 2)
-            
             if (Sn == Rn and verify_checksum(decoded_segment)):
                 print("[Segment SEQ="+str(Rn)+"] Received, Ack sent")
                 write_to_file(decoded_segment, dest_filename)
@@ -108,12 +123,23 @@ else:
                 Rn += 1
             elif (not verify_checksum(decoded_segment)):
                 print("[Segment SEQ="+str(Rn)+"] Segment damaged. Ack prev sequence number.")
+                print()
+                print("GO-BACK-N")
                 
             msg = make_message_segment(0, last_ack, ack=True)
             client_socket.sendto(msg.encode(), ('', 5000))
 
+    print()
+    print('++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++')
+    print('FILE TRANSFER COMPLETE')
+    print('++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++')
     STATE = constant.CLOSED
-    print("Connection closed with server")
-    print("Shutting down client")
+    print()
+    print('++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++')
+    print('SERVER CONNECTION CLOSED')
+    print('++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++')
+    print('==================================================================')
+    print('CLIENT SHUTTING DOWN')
+    print('==================================================================')
 
         
